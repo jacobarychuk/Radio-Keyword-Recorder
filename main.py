@@ -5,9 +5,7 @@ import subprocess
 import sys
 import os
 import json
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileType, Disposition
-import base64
+import requests
 
 
 def load_config(file_path):
@@ -33,37 +31,20 @@ EMAIL_CONTENT = config["email_content"]
 def send_email(filename):
 
     # Set the API key
-    api_key = os.environ.get("SENDGRID_API_KEY")
+    api_key = os.environ.get("MAILGUN_API_KEY")
 
-    # Create the email message
-    message = Mail(
-        from_email=EMAIL_SENDER,
-        to_emails=EMAIL_RECIPIENTS,
-        subject=EMAIL_SUBJECT,
-        plain_text_content=EMAIL_CONTENT
+    # Create and send the email
+    return requests.post(
+        "https://api.mailgun.net/v3/jacobarychuk.me/messages",
+        auth=("api", api_key),
+        data={
+            "from": EMAIL_SENDER,
+            "to": ", ".join(EMAIL_RECIPIENTS),
+            "subject": EMAIL_SUBJECT,
+            "text": EMAIL_CONTENT,
+        },
+        files={"attachment": open(filename, "rb")},
     )
-
-    # Read and encode the file in Base64
-    with open(filename, 'rb') as f:
-        file_data = base64.b64encode(f.read()).decode()
-
-    # Create the email attachment
-    attachment = Attachment(
-        FileContent(file_data),
-        FileName(filename),
-        FileType("audio/mpeg"),
-        Disposition("attachment")
-    )
-
-    # Add the attachment to the email
-    message.add_attachment(attachment)
-
-    # Send the email
-    try:
-        SendGridAPIClient(api_key).send(message)
-        print(f"Email sent to recipients: {EMAIL_RECIPIENTS}")
-    except Exception as e:
-        print(f"Error sending email: {e}", file=sys.stderr)
 
 
 def record_for_duration(url, duration, attempt_type):

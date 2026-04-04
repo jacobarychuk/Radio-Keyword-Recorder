@@ -6,6 +6,10 @@ import sys
 import os
 import json
 import requests
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 
 def load_config(file_path):

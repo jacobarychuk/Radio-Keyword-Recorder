@@ -20,6 +20,7 @@ def load_config(file_path):
 # Load constants globally
 config = load_config("config.json")
 SCHEDULED_TIMES = config["scheduled_times"]
+SCHEDULED_DAYS = config["scheduled_days"]
 PRIMARY_URL = config["primary_url"]
 FALLBACK_URL = config["fallback_url"]
 FULL_DURATION_SECONDS = config["full_duration_seconds"]
@@ -102,8 +103,9 @@ def job():
 def main():
 
     # Add jobs to the schedule
-    for scheduled_time in SCHEDULED_TIMES:
-        schedule.every().day.at(scheduled_time).do(job)
+    for scheduled_day in SCHEDULED_DAYS:
+        for scheduled_time in SCHEDULED_TIMES:
+            getattr(schedule.every(), scheduled_day).at(scheduled_time).do(job)
 
     # Run the scheduler
     while True:

@@ -72,17 +72,16 @@ def record_for_duration(url, duration, attempt_type):
 
     print(f"{attempt_type.capitalize()} recording completed: {filename}")
 
-    send_email(filename)
+    return filename
 
 
 def retry_recording(remaining_time):
     if remaining_time <= 0:
         print("No remaining time to retry.")
-        return
-    if remaining_time > MIN_RETRY_DURATION:
+    elif remaining_time > MIN_RETRY_DURATION:
         print(f"Retrying for remaining duration: {remaining_time} seconds")
         try:
-            record_for_duration(FALLBACK_URL, remaining_time, "retry")
+            return record_for_duration(FALLBACK_URL, remaining_time, "retry")
         except subprocess.CalledProcessError as e:
             print(f"Retry also failed: {e}", file=sys.stderr)
     else:
@@ -96,11 +95,14 @@ def job():
 
     # Record the stream
     try:
-        record_for_duration(PRIMARY_URL, FULL_DURATION_SECONDS, "full")
+        filename = record_for_duration(PRIMARY_URL, FULL_DURATION_SECONDS, "full")
+        send_email(filename)
     except subprocess.CalledProcessError as e:
         print(f"Error recording stream: {e}", file=sys.stderr)
         remaining_time = int((target_end_time - datetime.now()).total_seconds())
-        retry_recording(remaining_time)
+        filename = retry_recording(remaining_time)
+        if filename is not None:
+            send_email(filename)
 
 
 def main():

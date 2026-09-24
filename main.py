@@ -39,17 +39,20 @@ def send_email(filename):
     api_key = os.environ.get("MAILGUN_API_KEY")
 
     # Create and send the email
-    return requests.post(
-        "https://api.mailgun.net/v3/jacobarychuk.me/messages",
-        auth=("api", api_key),
-        data={
-            "from": EMAIL_SENDER,
-            "to": ", ".join(EMAIL_RECIPIENTS),
-            "subject": EMAIL_SUBJECT,
-            "text": EMAIL_CONTENT,
-        },
-        files={"attachment": open(filename, "rb")},
-    )
+    with open (filename, "rb") as attachment:
+        requests.post(
+            "https://api.mailgun.net/v3/jacobarychuk.me/messages",
+            auth=("api", api_key),
+            data={
+                "from": EMAIL_SENDER,
+                "to": ", ".join(EMAIL_RECIPIENTS),
+                "subject": EMAIL_SUBJECT,
+                "text": EMAIL_CONTENT,
+            },
+            files={"attachment": attachment},
+        )
+
+    os.remove(filename)
 
 
 def record_for_duration(url, duration, attempt_type):
